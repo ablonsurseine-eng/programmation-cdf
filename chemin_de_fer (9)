@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Chemin de fer — L'Ablonais</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & VARS ── */
+:root{
+  --bg:#F5F3EE;--sur:#FFF;--sur2:#EEECE6;--bdr:#D8D4C8;
+  --tx:#1A1916;--tx2:#6B6860;--tx3:#9B9890;
+  --ac:#1A3A5C;--ac2:#2D6A9F;
+  --todo:#F5F3EE;--todo-t:#6B6860;
+  --wip:#FFF0D4;--wip-t:#8A5A00;--wip-b:#F0C060;
+  --done:#D4EDD8;--done-t:#1A6B28;--done-b:#7DC88A;
+  --val:#D4E4F5;--val-t:#0D3A6B;--val-b:#6AAAD8;
+  --r:6px;--r2:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px;}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;}
+input,select,textarea{font-family:'DM Sans',sans-serif;}
+
+/* ── HEADER ── */
+header{background:var(--ac);color:#fff;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.logo{font-family:'DM Serif Display',serif;font-size:20px;white-space:nowrap;}
+.logo span{opacity:.5;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:400;margin-left:7px;}
+.h-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.chip{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:3px 11px;font-size:11.5px;font-weight:500;display:flex;align-items:center;gap:4px;}
+.chip input,.chip select{background:transparent;border:none;color:#fff;font-family:inherit;font-size:11.5px;font-weight:500;outline:none;}
+.chip input.num{width:26px;}
+.chip input.yr{width:38px;}
+.chip input.parution{width:200px;}
+.h-actions{display:flex;gap:6px;align-items:center;}
+.btn-save-manual{background:#fff;color:var(--ac);border:none;border-radius:var(--r);padding:6px 13px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.btn-save-manual:hover{background:#e8f0fa;}
+.save-indicator{font-size:11px;opacity:.55;white-space:nowrap;}
+
+/* ── COLLAB BANNER ── */
+.collab-banner{background:#1A5C3A;color:#fff;padding:7px 24px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.collab-banner a{color:#7DDBA8;text-decoration:underline;cursor:pointer;}
+.collab-mode-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:var(--r);padding:3px 10px;font-size:11px;color:#fff;cursor:pointer;}
+.collab-mode-btn:hover{background:rgba(255,255,255,.25);}
+
+/* ── TABS ── */
+.tabs{background:var(--sur);border-bottom:2px solid var(--bdr);padding:0 24px;display:flex;gap:0;overflow-x:auto;}
+.tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--tx2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.tab:hover{color:var(--tx);}
+.tab.active{color:var(--ac);border-bottom-color:var(--ac);}
+
+/* ── RETRO ── */
+.retro-wrap{background:var(--sur);border-bottom:1px solid var(--bdr);padding:10px 24px;}
+.retro-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer;user-select:none;}
+.retro-ttl{font-size:11.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;}
+.retro-sub{font-size:11px;color:var(--tx3);margin-left:8px;font-weight:400;text-transform:none;letter-spacing:0;}
+.retro-chev{font-size:11px;color:var(--tx3);}
+.retro-date-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.retro-date-lbl{font-size:11px;color:var(--tx2);}
+.retro-date-input{font-size:12px;border:1px solid var(--bdr);border-radius:var(--r);padding:3px 8px;color:var(--tx);background:var(--bg);outline:none;}
+.retro-date-input:focus{border-color:var(--ac2);}
+.retro-bar-wrap{position:relative;}
+.retro-bar{display:flex;height:26px;gap:2px;border-radius:5px;overflow:hidden;}
+.rseg{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;cursor:pointer;transition:filter .15s;flex-shrink:0;position:relative;}
+.rseg:hover{filter:brightness(1.12);}
+.rseg-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 5px;pointer-events:none;}
+/* cursor on bar */
+.retro-cursor{position:absolute;top:0;bottom:0;width:2px;background:#E8593C;z-index:10;pointer-events:none;transition:left .3s;}
+.retro-cursor::before{content:'▼';position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:10px;color:#E8593C;white-space:nowrap;}
+.retro-cursor::after{content:attr(data-label);position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:#E8593C;white-space:nowrap;font-weight:600;}
+.retro-body{display:none;margin-top:10px;}
+.retro-body.open{display:block;}
+.retro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:5px;}
+.rphase{border-radius:var(--r);padding:8px 11px;display:flex;gap:8px;}
+.rphase-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.rphase-ttl{font-size:11.5px;font-weight:600;margin-bottom:3px;}
+.rphase-items{font-size:11px;color:var(--tx2);line-height:1.6;}
+/* retro tooltip */
+.rtip{display:none;position:fixed;z-index:300;background:var(--sur);border:1px solid var(--bdr);border-radius:8px;padding:11px 13px;max-width:280px;box-shadow:0 8px 28px rgba(0,0,0,.18);font-size:11px;line-height:1.6;color:var(--tx);pointer-events:none;}
+.rtip.open{display:block;}
+.rtip h4{font-size:11.5px;font-weight:700;margin-bottom:4px;}
+.rtip ul{padding-left:13px;color:var(--tx2);}
+
+/* ── PROGRESS ── */
+.prog-wrap{background:var(--sur);border-bottom:1px solid var(--bdr);padding:8px 24px;display:flex;align-items:center;gap:10px;}
+.prog-lbl{font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;}
+.prog-track{flex:1;height:6px;background:var(--sur2);border-radius:3px;overflow:hidden;display:flex;gap:2px;}
+.pseg{height:100%;border-radius:2px;transition:width .3s;}
+.pseg.wip{background:var(--wip-b);}
+.pseg.done{background:var(--done-b);}
+.pseg.val{background:var(--val-b);}
+.pstats{display:flex;gap:12px;}
+.pstat{font-size:11px;color:var(--tx2);}
+.pstat strong{color:var(--tx);font-weight:600;}
+
+/* ── TOOLBAR ── */
+.toolbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:7px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.tlbl{font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;}
+.legend{display:flex;gap:7px;flex-wrap:wrap;}
+.li{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--tx2);}
+.ld{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+.ld-todo{background:var(--todo);border:1px solid var(--bdr);}
+.ld-wip{background:var(--wip);border:1px solid var(--wip-b);}
+.ld-done{background:var(--done);border:1px solid var(--done-b);}
+.ld-val{background:var(--val);border:1px solid var(--val-b);}
+.tsep{width:1px;height:18px;background:var(--bdr);margin:0 3px;}
+.ppill{font-size:8px;font-weight:700;border-radius:3px;padding:1px 5px;}
+.pa{background:#E8F0FA;color:#1A3A5C;}
+.pb{background:#F0EAF8;color:#4A1A7A;}
+.btn{background:var(--ac);color:#fff;border:none;border-radius:var(--r);padding:5px 11px;font-size:12px;font-weight:500;transition:opacity .15s;white-space:nowrap;}
+.btn:hover{opacity:.85;}
+.btn-o{background:none;border:1px solid var(--bdr);border-radius:var(--r);padding:5px 11px;font-size:12px;color:var(--tx2);}
+.btn-o:hover{border-color:var(--ac2);color:var(--ac);}
+.btn-del{background:none;border:1px solid #F0C0C0;border-radius:var(--r);padding:5px 11px;font-size:12px;color:#B02020;}
+.btn-del:hover{background:#FDE8E8;}
+
+/* ── VIEWS ── */
+.view{display:none;padding:20px 24px 60px;}
+.view.active{display:block;}
+
+/* ── GRID ── */
+.rlbl{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.prow{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:16px;}
+/* CARD */
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:6px 5px 5px;cursor:pointer;transition:box-shadow .15s,transform .1s;min-height:104px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,.06),0 2px 7px rgba(0,0,0,.04);}
+.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.11);transform:translateY(-1px);}
+.card.s-todo{background:var(--sur);border-color:var(--bdr);}
+.card.s-wip{background:var(--wip);border-color:var(--wip-b);}
+.card.s-done{background:var(--done);border-color:var(--done-b);}
+.card.s-val{background:var(--val);border-color:var(--val-b);}
+.card.sp{border-style:dashed;opacity:.72;}
+.card.couv{background:linear-gradient(135deg,#1A3A5C,#2D6A9F);border-color:#1A3A5C;}
+.card.couv .cn,.card.couv .cc,.card.couv .csvc{color:rgba(255,255,255,.6);}
+.card.couv .cr{color:#fff;}
+.card.couv .ctype{background:rgba(255,255,255,.18);color:rgba(255,255,255,.85);}
+.cn{font-size:8.5px;font-weight:600;color:var(--tx3);letter-spacing:.4px;margin-bottom:3px;}
+.card.s-wip .cn{color:var(--wip-t);}
+.card.s-done .cn{color:var(--done-t);}
+.card.s-val .cn{color:var(--val-t);}
+.cr{font-size:9.5px;font-weight:600;color:var(--ac);margin-bottom:2px;line-height:1.25;text-transform:uppercase;letter-spacing:.25px;}
+.card.s-wip .cr{color:var(--wip-t);}
+.card.s-done .cr{color:var(--done-t);}
+.card.s-val .cr{color:var(--val-t);}
+.cc{font-size:8.5px;color:var(--tx2);line-height:1.35;flex:1;overflow:hidden;}
+/* content items on card */
+.citem{display:flex;align-items:baseline;gap:3px;margin-bottom:1px;}
+.ctype{font-size:7.5px;font-weight:600;background:var(--sur2);color:var(--tx2);border-radius:2px;padding:0 3px;white-space:nowrap;flex-shrink:0;}
+.ctxt{font-size:8.5px;color:var(--tx2);line-height:1.3;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.cfoot{margin-top:4px;display:flex;align-items:center;justify-content:space-between;gap:3px;flex-wrap:wrap;}
+.csvc{font-size:8px;color:var(--tx3);background:rgba(0,0,0,.05);border-radius:3px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:68%;}
+
+/* ── TABLE ── */
+.twrap{overflow-x:auto;border:1px solid var(--bdr);border-radius:8px;background:var(--sur);}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{background:var(--ac);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;}
+thead th:first-child{border-radius:8px 0 0 0;}
+thead th:last-child{border-radius:0 8px 0 0;}
+tbody tr{border-bottom:1px solid var(--bdr);transition:background .1s;}
+tbody tr:hover{background:var(--sur2);}
+tbody tr:last-child{border-bottom:none;}
+td{padding:6px 10px;vertical-align:top;}
+td.td-n{font-weight:600;color:var(--tx2);width:55px;white-space:nowrap;}
+td.td-r{width:110px;}
+.ti{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx);background:transparent;border:none;width:100%;outline:none;padding:0;resize:none;min-height:18px;}
+.ti:focus{background:rgba(26,90,155,.05);border-radius:3px;padding:2px 4px;}
+.sbadge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid transparent;}
+.sbtodo{background:var(--todo);color:var(--todo-t);border-color:var(--bdr);}
+.sbwip{background:var(--wip);color:var(--wip-t);border-color:var(--wip-b);}
+.sbdone{background:var(--done);color:var(--done-t);border-color:var(--done-b);}
+.sbval{background:var(--val);color:var(--val-t);border-color:var(--val-b);}
+
+/* content items in table */
+.tci-list{display:flex;flex-direction:column;gap:3px;min-width:220px;}
+.tci{display:flex;align-items:flex-start;gap:5px;background:var(--sur2);border-radius:4px;padding:4px 6px;}
+.tci-type{font-size:10px;font-weight:600;color:var(--ac);white-space:nowrap;flex-shrink:0;}
+.tci-signs{font-size:9px;color:var(--tx3);white-space:nowrap;flex-shrink:0;}
+.tci-txt{font-size:11px;color:var(--tx);flex:1;}
+.tci-svc{font-size:10px;color:var(--tx2);font-style:italic;}
+.tci-del{background:none;border:none;color:#C04040;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;}
+.tci-del:hover{color:#8B0000;}
+.add-ci-btn{font-size:11px;color:var(--ac2);background:none;border:1px dashed var(--bdr);border-radius:4px;padding:3px 7px;cursor:pointer;margin-top:2px;display:inline-block;}
+.add-ci-btn:hover{background:var(--sur2);}
+
+/* online checkbox cell */
+.online-cell{display:flex;flex-direction:column;gap:4px;min-width:150px;}
+.online-cell label{display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;}
+.online-cell textarea{font-size:11px;border:1px solid var(--bdr);border-radius:4px;padding:3px 5px;width:100%;resize:vertical;min-height:36px;background:var(--bg);outline:none;}
+.online-cell textarea:focus{border-color:var(--ac2);}
+
+/* services multi-select */
+.svc-tags{display:flex;flex-wrap:wrap;gap:3px;min-width:130px;}
+.svc-tag{font-size:10px;background:#E8F0FA;color:#1A3A5C;border-radius:3px;padding:1px 5px;display:flex;align-items:center;gap:3px;}
+.svc-tag button{background:none;border:none;color:#1A3A5C;font-size:11px;cursor:pointer;padding:0;line-height:1;}
+.svc-add{font-size:10px;color:var(--ac2);background:none;border:1px dashed var(--bdr);border-radius:3px;padding:1px 6px;cursor:pointer;}
+.svc-add:hover{background:var(--sur2);}
+
+/* ── STATS VIEW ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;}
+.stat-card h3{font-size:13px;font-weight:600;color:var(--ac);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bdr);}
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--sur2);}
+.stat-row:last-child{border-bottom:none;}
+.stat-svc{font-size:12px;color:var(--tx);}
+.stat-sub{font-size:11px;color:var(--tx3);margin-left:8px;}
+.stat-bar-wrap{flex:1;margin:0 10px;height:6px;background:var(--sur2);border-radius:3px;overflow:hidden;}
+.stat-bar{height:100%;background:var(--ac2);border-radius:3px;transition:width .4s;}
+.stat-num{font-size:12px;font-weight:600;color:var(--tx);min-width:28px;text-align:right;}
+.stat-total{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:8px;border-top:1px solid var(--bdr);font-size:12px;color:var(--tx2);}
+.stat-badge{background:var(--ac);color:#fff;border-radius:var(--r);padding:2px 8px;font-size:11px;font-weight:600;}
+/* type chart */
+.type-chart{display:flex;flex-direction:column;gap:6px;}
+.tc-row{display:flex;align-items:center;gap:8px;}
+.tc-lbl{font-size:11px;color:var(--tx2);width:140px;flex-shrink:0;}
+.tc-signs{font-size:10px;color:var(--tx3);width:70px;flex-shrink:0;text-align:right;}
+.tc-bar-w{flex:1;height:8px;background:var(--sur2);border-radius:4px;overflow:hidden;}
+.tc-bar{height:100%;border-radius:4px;background:var(--ac2);}
+.tc-num{font-size:11px;font-weight:600;color:var(--tx);min-width:24px;text-align:right;}
+
+/* ── MODAL SYSTEM ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(20,18,14,.52);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--sur);border-radius:var(--r2);width:100%;max-width:520px;box-shadow:0 20px 56px rgba(0,0,0,.24);overflow:hidden;max-height:94vh;display:flex;flex-direction:column;}
+.modal.wide{max-width:680px;}
+.mhead{background:var(--ac);color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.mttl{font-family:'DM Serif Display',serif;font-size:15px;}
+.mclose{background:none;border:none;color:#fff;font-size:21px;cursor:pointer;opacity:.65;line-height:1;padding:0;}
+.mclose:hover{opacity:1;}
+.mbody{padding:16px 18px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.mfoot{padding:11px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:flex-end;gap:7px;flex-shrink:0;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:5px;}
+.fi,.fsel,.fta{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--tx);background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:7px 9px;outline:none;transition:border-color .15s;width:100%;}
+.fi:focus,.fsel:focus,.fta:focus{border-color:var(--ac2);}
+.fta{resize:vertical;min-height:55px;}
+.sbtns,.pbtns{display:flex;gap:5px;}
+.sbtn,.pbtn{flex:1;padding:6px 3px;border:2px solid transparent;border-radius:var(--r);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;}
+.sbtn.st{background:var(--todo);color:var(--todo-t);border-color:var(--bdr);}
+.sbtn.sw{background:var(--wip);color:var(--wip-t);border-color:var(--wip-b);}
+.sbtn.sd{background:var(--done);color:var(--done-t);border-color:var(--done-b);}
+.sbtn.sv{background:var(--val);color:var(--val-t);border-color:var(--val-b);}
+.sbtn.on,.pbtn.on{outline:3px solid var(--ac);outline-offset:1px;}
+.pbtn.pa{background:#E8F0FA;color:#1A3A5C;border-color:#B8CEE8;}
+.pbtn.pb{background:#F0EAF8;color:#4A1A7A;border-color:#C8B0E8;}
+.bc{background:none;border:1px solid var(--bdr);border-radius:var(--r);padding:7px 14px;font-family:inherit;font-size:13px;cursor:pointer;color:var(--tx2);}
+.bs{background:var(--ac);border:none;border-radius:var(--r);padding:7px 16px;font-family:inherit;font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s;}
+.bs:hover{opacity:.85;}
+.bd{background:#B02020;border:none;border-radius:var(--r);padding:7px 14px;font-family:inherit;font-size:13px;color:#fff;cursor:pointer;}
+.bd:hover{opacity:.85;}
+
+/* ── INFO BTN ── */
+.ib{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--ac2);color:#fff;font-size:8px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.ipop{display:none;position:fixed;z-index:200;background:var(--sur);border:1px solid var(--bdr);border-radius:8px;padding:13px;max-width:340px;box-shadow:0 8px 30px rgba(0,0,0,.17);font-size:12px;line-height:1.6;color:var(--tx);}
+.ipop.open{display:block;}
+.ipop h4{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--ac);}
+.ipop ol{padding-left:15px;}
+.ipop ol li{margin-bottom:6px;}
+
+/* content items in modal */
+.ci-list{display:flex;flex-direction:column;gap:6px;}
+.ci-item{background:var(--sur2);border-radius:var(--r);padding:8px 10px;display:flex;flex-direction:column;gap:5px;position:relative;}
+.ci-item-head{display:flex;align-items:center;gap:6px;}
+.ci-type-sel{font-size:12px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:4px 6px;color:var(--tx);outline:none;}
+.ci-type-sel:focus{border-color:var(--ac2);}
+.ci-signs-hint{font-size:10px;color:var(--tx3);font-style:italic;}
+.ci-txt-i{font-size:12px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:4px 7px;color:var(--tx);outline:none;flex:1;}
+.ci-txt-i:focus{border-color:var(--ac2);}
+.ci-svc-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.ci-svc-sel{font-size:11px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:3px 6px;color:var(--tx);outline:none;}
+.ci-del-btn{position:absolute;top:6px;right:8px;background:none;border:none;color:#C04040;font-size:14px;cursor:pointer;padding:0;line-height:1;}
+.add-ci{background:var(--sur);border:1px dashed var(--bdr);border-radius:var(--r);padding:7px;font-size:12px;color:var(--ac2);cursor:pointer;text-align:center;margin-top:2px;}
+.add-ci:hover{background:var(--sur2);}
+
+/* services multi-select modal */
+.svc-modal-wrap{display:flex;flex-direction:column;gap:5px;}
+.svc-sel-tags{display:flex;flex-wrap:wrap;gap:4px;min-height:28px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:5px 7px;}
+.svc-sel-tag{font-size:11px;background:#E8F0FA;color:#1A3A5C;border-radius:3px;padding:2px 6px;display:flex;align-items:center;gap:3px;}
+.svc-sel-tag button{background:none;border:none;color:#1A3A5C;font-size:12px;cursor:pointer;padding:0;line-height:1;}
+.svc-dropdown{font-size:12px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:5px 8px;color:var(--tx);outline:none;width:100%;}
+
+/* page delete in grid */
+.card-del{position:absolute;top:3px;right:3px;background:none;border:none;color:rgba(180,0,0,.5);font-size:11px;cursor:pointer;padding:0;line-height:1;display:none;}
+.card:hover .card-del{display:block;}
+.card{position:relative;}
+
+/* ── MISC ── */
+.minfo{font-size:11.5px;color:var(--tx2);background:var(--sur2);border-radius:var(--r);padding:7px 10px;line-height:1.5;}
+.section-title{font-size:14px;font-weight:600;color:var(--ac);margin-bottom:12px;margin-top:4px;}
+.divider{height:1px;background:var(--bdr);margin:12px 0;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">L'Ablonais <span>Chemin de fer</span></div>
+  <div class="h-meta">
+    <div class="chip">n°&nbsp;<input class="num" type="text" id="numJournal" value="62"></div>
+    <div class="chip">
+      <select id="periode">
+        <option value="Déc–Jan–Fév">Déc · Jan · Fév</option>
+        <option value="Mar–Avr–Mai">Mar · Avr · Mai</option>
+        <option value="Juin–Juil–Août" selected>Juin · Juil · Août</option>
+        <option value="Sep–Oct–Nov">Sep · Oct · Nov</option>
+      </select>
+      <input class="yr" type="text" id="annee" value="2026">
+    </div>
+    <div class="chip"><input class="parution" type="text" id="parution" value="Trimestriel · Parution début juin 2026"></div>
+    <div class="chip" id="pageChip" style="cursor:pointer;text-decoration:underline dotted;" onclick="openAddModal()" title="Cliquer pour gérer les pages">40 pages</div>
+  </div>
+  <div class="h-actions">
+    <span class="save-indicator" id="lastSave">Non sauvegardé</span>
+    <button class="btn-save-manual" onclick="manualSave()">💾 Sauvegarder</button>
+  </div>
+</header>
+
+<!-- COLLAB BANNER -->
+<div class="collab-banner" id="collabBanner">
+  🤝 <strong>Collaboration :</strong> Pour travailler en équipe, hébergez ce fichier sur votre serveur et utilisez un backend partagé.
+  <a onclick="showCollabHelp()">Comment configurer ?</a>
+  <button class="collab-mode-btn" onclick="openCollabConfig()">⚙ Configurer le serveur</button>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchView('grid')">🗺 Chemin de fer</div>
+  <div class="tab" onclick="switchView('table')">📋 Tableau récap</div>
+  <div class="tab" onclick="switchView('stats')">📊 Statistiques</div>
+</div>
+
+<!-- RÉTROPLANNING -->
+<div class="retro-wrap">
+  <div class="retro-head" onclick="toggleRetro()">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span class="retro-ttl">🗓️ Rétroplanning — Trimestriel</span>
+      <span class="retro-sub">Survolez une phase pour le détail · Cliquez pour naviguer</span>
+    </div>
+    <span class="retro-chev" id="rchev">▼ Déplier</span>
+  </div>
+  <div class="retro-date-row">
+    <span class="retro-date-lbl">📅 Date de distribution (Semaine 0) :</span>
+    <input type="date" class="retro-date-input" id="retroDate" onchange="updateRetroCursor()">
+    <span class="retro-date-lbl" id="retroDateReadable" style="color:var(--ac2);font-weight:500;"></span>
+  </div>
+  <div class="retro-bar-wrap">
+    <div class="retro-bar" id="rbar"></div>
+    <div class="retro-cursor" id="retroCursor" style="display:none;"></div>
+  </div>
+  <div class="retro-body" id="rbody">
+    <div class="retro-grid" id="rphases"></div>
+  </div>
+</div>
+<div class="rtip" id="rtip"></div>
+
+<!-- PROGRESS -->
+<div class="prog-wrap">
+  <div class="prog-lbl">Avancement</div>
+  <div class="prog-track">
+    <div class="pseg wip" id="pg-wip" style="width:0%"></div>
+    <div class="pseg done" id="pg-done" style="width:0%"></div>
+    <div class="pseg val" id="pg-val" style="width:0%"></div>
+  </div>
+  <div class="pstats">
+    <div class="pstat"><strong id="c-wip">0</strong> en cours</div>
+    <div class="pstat"><strong id="c-done">0</strong> rédigées</div>
+    <div class="pstat"><strong id="c-val">0</strong> validées</div>
+    <div class="pstat"><strong id="c-tot">40</strong> pages</div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="tlbl">Statuts</span>
+  <div class="legend">
+    <div class="li"><div class="ld ld-todo"></div>À faire</div>
+    <div class="li"><div class="ld ld-wip"></div>En cours</div>
+    <div class="li"><div class="ld ld-done"></div>Rédigé</div>
+    <div class="li"><div class="ld ld-val"></div>Validé</div>
+  </div>
+  <div class="tsep"></div>
+  <span class="tlbl">Parcours</span>
+  <div class="legend">
+    <div class="li"><span class="ppill pa">A</span>&nbsp;Service</div>
+    <div class="li"><span class="ppill pb">B</span>&nbsp;Comm.</div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:6px;">
+    <button class="btn-o" onclick="openAddModal()">⊞ Gérer les pages</button>
+    <button class="btn" onclick="resetAll()">↺ Nouveau numéro</button>
+  </div>
+</div>
+
+<!-- GRID VIEW -->
+<div class="view active" id="view-grid"><div id="grid"></div></div>
+
+<!-- TABLE VIEW -->
+<div class="view" id="view-table">
+  <div class="twrap"><table>
+    <thead><tr>
+      <th>Page</th><th>Rubrique</th><th>Contenus de la page</th>
+      <th>Responsable(s) / service(s)</th>
+      <th>Parcours <span class="ib" onclick="showInfo(event)">i</span></th>
+      <th>Statut</th>
+      <th>En ligne + RS</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table></div>
+</div>
+
+<!-- STATS VIEW -->
+<div class="view" id="view-stats">
+  <div class="section-title">Articles par service</div>
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="divider"></div>
+  <div class="section-title">Répartition par type de contenu</div>
+  <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;max-width:500px;">
+    <div class="type-chart" id="typeChart"></div>
+  </div>
+</div>
+
+<!-- INFO POPUP -->
+<div class="ipop" id="ipop">
+  <h4>Parcours de validation</h4>
+  <ol>
+    <li><strong>Parcours A — Rédaction par le service</strong><br>Rédaction → Validation Dir. pôle (n+1) → Envoi comm. → Validation Dir. comm. → Validation finale</li>
+    <li><strong>Parcours B — Rédaction par la comm.</strong><br>Rédaction comm. → 1ère lecture Dir. comm. → Retour service + Dir. pôle → Validation Dir. comm. → Validation finale</li>
+  </ol>
+  <div style="margin-top:7px;font-size:10.5px;color:var(--tx3)">Cliquer ailleurs pour fermer</div>
+</div>
+
+<!-- MODAL ÉDITION PAGE -->
+<div class="overlay" id="editOverlay">
+  <div class="modal wide">
+    <div class="mhead">
+      <div class="mttl" id="mttl">Page –</div>
+      <button class="mclose" onclick="closeEdit()">×</button>
+    </div>
+    <div class="mbody">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg"><div class="fl">Rubrique</div><input class="fi" id="e-rub" placeholder="ex : Actualités…"></div>
+        <div class="fg">
+          <div class="fl">Parcours <span class="ib" onclick="showInfo(event)">i</span></div>
+          <div class="pbtns">
+            <button class="pbtn pa" onclick="setPar('A')" id="pb-a">A — Service</button>
+            <button class="pbtn pb" onclick="setPar('B')" id="pb-b">B — Comm.</button>
+          </div>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fl">Responsable(s) / service(s)
+          <span style="font-size:10px;color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0;">(plusieurs possibles)</span>
+        </div>
+        <div id="svc-tags-wrap" class="svc-modal-wrap">
+          <div class="svc-sel-tags" id="svc-tags"></div>
+          <select class="svc-dropdown" id="svc-dropdown" onchange="addSvcTag(this.value);this.value=''">
+            <option value="">+ Ajouter un service…</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fl">Contenus de la page</div>
+        <div class="ci-list" id="ci-list"></div>
+        <button class="add-ci" onclick="addCiItem()">＋ Ajouter un contenu</button>
+      </div>
+      <div class="fg">
+        <div class="fl">Statut</div>
+        <div class="sbtns">
+          <button class="sbtn st" onclick="setSta('todo')" id="sb-t">À faire</button>
+          <button class="sbtn sw" onclick="setSta('wip')"  id="sb-w">En cours</button>
+          <button class="sbtn sd" onclick="setSta('done')" id="sb-d">Rédigé</button>
+          <button class="sbtn sv" onclick="setSta('val')"  id="sb-v">Validé</button>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="bd" id="btn-del-page" onclick="deleteCurPage()">🗑 Supprimer cette page</button>
+      <div style="flex:1"></div>
+      <button class="bc" onclick="closeEdit()">Annuler</button>
+      <button class="bs" onclick="saveEdit()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GÉRER PAGES -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="mhead"><div class="mttl">Gérer les pages</div><button class="mclose" onclick="closeAddModal()">×</button></div>
+    <div class="mbody">
+      <div class="minfo">Le journal doit rester en nombre pair (cahiers de 4 pages). La 1ère et 4ème de couverture sont fixes.</div>
+      <div class="fg"><div class="fl">Ajouter des pages</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="fsel" id="addCount" style="flex:1;">
+            <option value="4">+ 4 pages</option><option value="8">+ 8 pages</option><option value="12">+ 12 pages</option>
+          </select>
+          <select class="fsel" id="addPos" style="flex:1;">
+            <option value="end">Avant la 4ème de couv.</option><option value="mid">Au milieu</option>
+          </select>
+          <button class="btn" onclick="confirmAdd()">Ajouter</button>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="fg"><div class="fl">Supprimer des pages</div>
+        <div class="minfo" style="margin-bottom:8px;">Cliquer sur une page dans la liste ci-dessous pour la supprimer (les couverts sont protégés).</div>
+        <div id="del-page-list" style="display:flex;flex-wrap:wrap;gap:5px;max-height:200px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="bc" onclick="closeAddModal()">Fermer</button></div>
+  </div>
+</div>
+
+<!-- MODAL COLLAB -->
+<div class="overlay" id="collabOverlay">
+  <div class="modal">
+    <div class="mhead"><div class="mttl">Collaboration en équipe</div><button class="mclose" onclick="document.getElementById('collabOverlay').classList.remove('open')">×</button></div>
+    <div class="mbody">
+      <div class="minfo" style="background:#E8F5ED;border-radius:var(--r);padding:10px;">
+        <strong>Comment ça marche ?</strong><br>
+        Ce fichier utilise un fichier <code>cdf_data.json</code> sur votre serveur comme base partagée. Toute l'équipe accède au même fichier HTML hébergé, et les données sont lues/écrites sur le serveur via une petite API (PHP ou Node).
+      </div>
+      <div class="fg">
+        <div class="fl">URL de l'API de sauvegarde</div>
+        <input class="fi" id="api-url" placeholder="https://votreserveur.fr/cdf_save.php" value="">
+        <div style="font-size:11px;color:var(--tx3);margin-top:3px;">Laissez vide pour utiliser le stockage local uniquement.</div>
+      </div>
+      <div class="fg">
+        <div class="fl">Instructions pour votre administrateur</div>
+        <div class="minfo" style="font-size:11px;line-height:1.7;">
+          1. Créez <code>cdf_save.php</code> sur votre serveur :<br>
+          <code style="font-size:10px;background:#f0f0f0;padding:4px 6px;display:block;border-radius:4px;margin:4px 0;">&lt;?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET,POST');
+$f = __DIR__.'/cdf_data.json';
+if ($_SERVER['REQUEST_METHOD']==='POST') {
+  file_put_contents($f, file_get_contents('php://input'));
+  echo json_encode(['ok'=>true]);
+} else {
+  echo file_exists($f) ? file_get_contents($f) : json_encode(null);
+}</code>
+          2. Hébergez <code>chemin_de_fer.html</code> sur le même serveur.<br>
+          3. Renseignez l'URL ci-dessus et sauvegardez.<br>
+          4. Toute l'équipe ouvre la même URL — les données sont partagées.
+        </div>
+      </div>
+      <div class="fg" id="collab-status"></div>
+    </div>
+    <div class="mfoot">
+      <button class="bc" onclick="document.getElementById('collabOverlay').classList.remove('open')">Fermer</button>
+      <button class="bs" onclick="saveCollabConfig()">Enregistrer la config</button>
+    </div>
+  </div>
+</div>
+
+<script id="main-script">
+// ════════════════════════════════════════════════════
+// CONSTANTES
+// ════════════════════════════════════════════════════
+const KEY = 'ablonais_v4';
+const API_KEY = 'ablonais_api_url';
+
+const TYPES = [
+  {id:'edito',     lbl:'Édito',                signs:2500},
+  {id:'breve',     lbl:'Brève',                signs:700},
+  {id:'quart',     lbl:'Article quart de page',signs:900},
+  {id:'demi',      lbl:'Article demi-page',    signs:2000},
+  {id:'page',      lbl:'Article une page',     signs:2700},
+  {id:'deux',      lbl:'Article deux pages',   signs:5400},
+  {id:'portrait',  lbl:'Portrait',             signs:5000},
+  {id:'zoom',      lbl:'Zoom',                 signs:4500},
+  {id:'dossier',   lbl:'Dossier',              signs:9000},
+  {id:'encart',    lbl:'Encart',               signs:null},
+];
+
+const SERVICES = {
+  'DGS': 'Direction générale',
+  'SG': 'Direction générale',
+  'Chargé de mission': 'Direction générale',
+  'Guichet unique': 'Pôle Enfance Population',
+  'Service scolaire': 'Pôle Enfance Population',
+  'Service animation': 'Pôle Enfance Population',
+  'Service petite enfance': 'Pôle Enfance Population',
+  'Service restauration': 'Pôle Enfance Population',
+  'RH': 'Pôle Ressources',
+  'Finance': 'Pôle Ressources',
+  'Commande publique': 'Pôle Ressources',
+  'DST': 'Pôle Technique',
+  'Service Patrimoine bâti': 'Pôle Technique',
+  'Service espaces verts': 'Pôle Technique',
+  'Service voiries / propreté': 'Pôle Technique',
+  'Pôle développement urbain': 'Pôle Développement urbain',
+  'Service communication': 'Pôle Communication',
+  'Service culturel': 'Pôle Communication',
+  'Service événementiel': 'Pôle Communication',
+  'Guichet des associations': 'Pôle Communication',
+  'Médiathèque Jacques-Prévert': 'Médiathèque',
+  'Police municipale': 'Police municipale',
+  'Partenaires': 'Partenaires',
+  'Écoles ablonaises': 'Écoles',
+};
+const POLES = {
+  'Direction générale': ['DGS','SG','Chargé de mission'],
+  'Pôle Enfance Population': ['Guichet unique','Service scolaire','Service animation','Service petite enfance','Service restauration'],
+  'Pôle Ressources': ['RH','Finance','Commande publique'],
+  'Pôle Technique': ['DST','Service Patrimoine bâti','Service espaces verts','Service voiries / propreté'],
+  'Pôle Développement urbain': ['Pôle développement urbain'],
+  'Pôle Communication': ['Service communication','Service culturel','Service événementiel','Guichet des associations'],
+  'Médiathèque': ['Médiathèque Jacques-Prévert'],
+  'Police municipale': ['Police municipale'],
+  'Partenaires': ['Partenaires'],
+  'Écoles': ['Écoles ablonaises'],
+};
+const ALL_SVCS = Object.keys(SERVICES);
+
+const PHASES = [
+  {id:'strat',short:'S-12→-10',weeks:'S-12 à S-10',lbl:'Stratégie & chemin de fer',col:'#7B4EA0',bg:'#F3ECF9',w:3, startW:-12,endW:-10,
+   items:['Définition des grandes thématiques','Arbitrage avec élus / DGS / cabinet','Construction du chemin de fer V1','Identification des sujets, angles, interlocuteurs','Répartition des contenus']},
+  {id:'prod',short:'S-10→-6',weeks:'S-10 à S-6',lbl:'Production des contenus',col:'#1A6EA0',bg:'#E8F2FA',w:5, startW:-10,endW:-6,
+   items:['Rédaction des articles','Interviews (élus, services, habitants)','Commande / réalisation des photos','Collecte des infos']},
+  {id:'ctrl',short:'S-7',weeks:'Semaine -7',lbl:'Point de contrôle',col:'#1A8040',bg:'#E8F5ED',w:1, startW:-7,endW:-6,
+   items:['Revue globale des contenus reçus','Identification des retards','Ajustement du chemin de fer']},
+  {id:'maq1',short:'S-7→-5',weeks:'S-7 à S-5',lbl:'Maquette V1',col:'#A08010',bg:'#FDF8E0',w:3, startW:-7,endW:-5,
+   items:['Intégration progressive dans la maquette','Travail par double-page','Équilibre textes / images / respiration','Livrable : V1 complète']},
+  {id:'relu',short:'S-4',weeks:'Semaine -4',lbl:'Relecture interne',col:'#C05A10',bg:'#FDF0E4',w:1, startW:-4,endW:-3,
+   items:['Corrections ortho / syntaxe','Harmonisation des tons','Vérification infos','Validation des retours services']},
+  {id:'vali',short:'S-3',weeks:'Semaine -3',lbl:'Validation DGS + élus',col:'#B02020',bg:'#FDEAEA',w:1, startW:-3,endW:-2,
+   items:['Envoi du journal complet (PDF)','Collecte des retours','Arbitrages politiques']},
+  {id:'maq2',short:'S-2',weeks:'Semaine -2',lbl:'Maquette V2 + corrections',col:'#6B3A1A',bg:'#F5ECE4',w:1, startW:-2,endW:-1,
+   items:['Intégration des retours DGS + élus','Ajustements finaux','Vérification crédits, noms, pagination, QR codes, sommaire']},
+  {id:'bat',short:'S-1',weeks:'Semaine -1',lbl:'BAT final & impression',col:'#2A2A2A',bg:'#EBEBEB',w:1, startW:-1,endW:0,
+   items:['Relecture finale','Envoi en impression','Validation du BAT imprimeur']},
+  {id:'diff',short:'S 0',weeks:'Semaine 0',lbl:'Diffusion',col:'#1A5C3A',bg:'#E8F5ED',w:1, startW:0,endW:1,
+   items:['Distribution (boîtes aux lettres, points publics)','Mise en ligne sur le site','Relais réseaux sociaux']},
+];
+
+const DEF_PAGES = [
+  {r:'1ère de couv.',ci:[],svcs:[],p:'B',st:'todo',sp:'couv',on:false,onc:''},
+  {r:'Dossier',ci:[{t:'encart',tx:'Renvoi p.12 / p.16 / p.18',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Sommaire',ci:[],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Édito',ci:[{t:'edito',tx:'Éric Grillon, Maire',s:'DGS'}],svcs:['DGS'],p:'A',st:'todo',on:false,onc:''},
+  {r:'La pleine page',ci:[],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Actualités',ci:[{t:'demi',tx:'Goûter festif aînés – moment interg. si CME présent',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Actualités',ci:[{t:'quart',tx:'Ouverture guinguette 15 mai–15 sept.',s:'Service communication'},{t:'breve',tx:'Lancement saison culturelle',s:'Service culturel'},{t:'breve',tx:'Brève dispo',s:'Service communication'}],svcs:['Service communication','Service culturel'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Actualités',ci:[{t:'page',tx:'Présentation projet goûters festifs aînés',s:'Service animation'}],svcs:['Service animation'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Portrait',ci:[{t:'portrait',tx:'Commerçant/artisan ablonais ou jeune entrepreneur',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Portrait',ci:[{t:'portrait',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:'Le zoom',ci:[{t:'zoom',tx:"Ablon d'antan – suite",s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Le zoom',ci:[{t:'zoom',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:'Actualités',ci:[{t:'quart',tx:"Responsable restau à l'AG des cuisiniers de la République",s:'Service restauration'},{t:'breve',tx:'Subvention MGP véhicule hybride',s:'DGS'},{t:'breve',tx:'Rapport entomologique commune',s:'Service voiries / propreté'}],svcs:['Service restauration','DGS','Service voiries / propreté'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Actualités',ci:[{t:'page',tx:'Événement samedi 5 sept. 2026 – Forum assos + Fête rentrée + Soirée REI',s:'Service événementiel'}],svcs:['Service événementiel'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Actualités',ci:[{t:'demi',tx:'Fortes chaleurs et canicule – prévention',s:'Service communication'}],svcs:['Service communication'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Actualités',ci:[{t:'demi',tx:'Campagne déjection canine',s:'Police municipale'}],svcs:['Police municipale'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Le coin des assos',ci:[{t:'page',tx:'Boxing Club',s:'Guichet des associations'}],svcs:['Guichet des associations'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Dossier',ci:[{t:'dossier',tx:'Nouvelle équipe municipale – présentation',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Dossier',ci:[{t:'dossier',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:'Dossier',ci:[{t:'dossier',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:'Dossier',ci:[{t:'dossier',tx:'Présentation des délégations',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Dossier',ci:[{t:'dossier',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:'Le coin de la Média',ci:[{t:'demi',tx:'Retour atelier médiathèque',s:'Médiathèque Jacques-Prévert'}],svcs:['Médiathèque Jacques-Prévert'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Le coin de la Média',ci:[{t:'breve',tx:'Actualité'},{t:'breve',tx:'RDV de la Média'},{t:'breve',tx:'Coups de cœur littéraires'}].map(x=>({...x,s:'Médiathèque Jacques-Prévert'})),svcs:['Médiathèque Jacques-Prévert'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Focus infos travaux',ci:[{t:'demi',tx:'Terminés · En cours · À venir – vestiaires',s:'Service Patrimoine bâti'},{t:'demi',tx:'Voiries',s:'Service voiries / propreté'}],svcs:['Service Patrimoine bâti','Service voiries / propreté'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Focus infos travaux',ci:[{t:'demi',tx:'Suite',s:'DST'}],svcs:['DST'],p:'A',st:'todo',sp:true,on:false,onc:''},
+  {r:"L'œil de la ville",ci:[{t:'quart',tx:'REI – recensement des sujets',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:"L'œil de la ville",ci:[{t:'quart',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:"L'œil de la ville",ci:[{t:'quart',tx:'REI – recensement des sujets',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:"L'œil de la ville",ci:[{t:'quart',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:"L'œil de la ville",ci:[{t:'quart',tx:'REI – recensement des sujets',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:"L'œil de la ville",ci:[{t:'quart',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:"L'œil de la ville",ci:[{t:'quart',tx:'REI – recensement des sujets',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:"L'œil de la ville",ci:[{t:'quart',tx:'Suite',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:true,on:false,onc:''},
+  {r:'Démocratie locale',ci:[{t:'demi',tx:'Actualité territoire & MGP',s:'DGS'},{t:'demi',tx:'Tribune opposition (deadline 05/02)',s:'DGS'}],svcs:['DGS'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Démocratie locale',ci:[{t:'demi',tx:'Compte-rendu CM',s:'SG'},{t:'breve',tx:'Date prochain CM',s:'SG'}],svcs:['SG'],p:'A',st:'todo',on:false,onc:''},
+  {r:'Infos pratiques',ci:[{t:'encart',tx:'Collecte des déchets',s:'Service voiries / propreté'},{t:'encart',tx:'Horaires mairie / ECAP / Médiathèque',s:'SG'}],svcs:['Service voiries / propreté','SG'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Infos pratiques',ci:[{t:'encart',tx:'Permanences gratuites'},{t:'encart',tx:'État civil'},{t:'encart',tx:'Numéros utiles'}].map(x=>({...x,s:'SG'})),svcs:['SG'],p:'B',st:'todo',on:false,onc:''},
+  {r:'Infos pratiques',ci:[],svcs:['Service communication'],p:'B',st:'todo',on:false,onc:''},
+  {r:'4ème de couv.',ci:[{t:'encart',tx:'Feux de la Saint Jean',s:'Service communication'}],svcs:['Service communication'],p:'B',st:'todo',sp:'couv',on:false,onc:''},
+];
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let pages=[], curIdx=null, curSta='todo', curPar='B', curSvcs=[], curCi=[];
+let apiUrl = localStorage.getItem(API_KEY)||'';
+let autoSaveTimer=null;
+
+// ════════════════════════════════════════════════════
+// STORAGE / COLLAB
+// ════════════════════════════════════════════════════
+async function load(){
+  if(apiUrl){
+    try{
+      const r=await fetch(apiUrl+'?t='+Date.now());
+      if(r.ok){const d=await r.json();if(d&&d.pages){pages=d.pages;applyMeta(d);return;}}
+    }catch(e){}
+  }
+  try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);pages=d.pages||[];applyMeta(d);return;}}catch(e){}
+  pages=JSON.parse(JSON.stringify(DEF_PAGES));
+}
+
+function applyMeta(d){
+  if(d.retroDate) document.getElementById('retroDate').value=d.retroDate;
+}
+
+function getData(){
+  return {
+    pages,
+    retroDate: document.getElementById('retroDate').value,
+    ts: Date.now()
+  };
+}
+
+async function saveData(silent=false){
+  const d=getData();
+  localStorage.setItem(KEY,JSON.stringify(d));
+  if(apiUrl){
+    try{await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});}catch(e){}
+  }
+  if(!silent){
+    const n=new Date();
+    document.getElementById('lastSave').textContent='Sauvegardé '+n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+  }
+}
+
+function scheduleAutoSave(){
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(()=>saveData(true),2000);
+}
+
+function manualSave(){
+  saveData(false);
+  const btn=document.querySelector('.btn-save-manual');
+  btn.textContent='✓ Sauvegardé !';
+  setTimeout(()=>btn.textContent='💾 Sauvegarder',2000);
+}
+
+function openCollabConfig(){
+  document.getElementById('api-url').value=apiUrl;
+  document.getElementById('collabOverlay').classList.add('open');
+}
+
+function saveCollabConfig(){
+  apiUrl=document.getElementById('api-url').value.trim();
+  localStorage.setItem(API_KEY,apiUrl);
+  const st=document.getElementById('collab-status');
+  if(apiUrl){
+    st.innerHTML='<div class="minfo" style="background:#E8F5ED;">✓ URL configurée. Faites une sauvegarde manuelle pour tester la connexion.</div>';
+  } else {
+    st.innerHTML='<div class="minfo">Mode local uniquement.</div>';
+  }
+}
+
+function showCollabHelp(){ openCollabConfig(); }
+
+// Auto-refresh si API configurée (toutes les 30s)
+setInterval(async()=>{
+  if(!apiUrl) return;
+  try{
+    const r=await fetch(apiUrl+'?t='+Date.now());
+    if(!r.ok) return;
+    const d=await r.json();
+    if(d&&d.ts&&d.ts>getData().ts){pages=d.pages;applyMeta(d);renderAll();document.getElementById('lastSave').textContent='Sync '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+  }catch(e){}
+},30000);
+
+function resetAll(){
+  if(!confirm('Réinitialiser pour un nouveau numéro ?')) return;
+  pages=JSON.parse(JSON.stringify(DEF_PAGES));
+  saveData(); renderAll();
+}
+
+// ════════════════════════════════════════════════════
+// VIEWS
+// ════════════════════════════════════════════════════
+function switchView(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  const i=['grid','table','stats'].indexOf(v);
+  document.querySelectorAll('.tab')[i].classList.add('active');
+  if(v==='table') renderTable();
+  if(v==='stats') renderStats();
+}
+
+// ════════════════════════════════════════════════════
+// GRID
+// ════════════════════════════════════════════════════
+function renderGrid(){
+  const g=document.getElementById('grid'); g.innerHTML='';
+  const n=pages.length, rs=10;
+  for(let r=0;r*rs<n;r++){
+    const w=document.createElement('div');
+    const l=document.createElement('div');l.className='rlbl';
+    l.textContent=`Pages ${r*rs+1}–${Math.min((r+1)*rs,n)}`;
+    w.appendChild(l);
+    const row=document.createElement('div');row.className='prow';
+    for(let c=0;c<rs&&r*rs+c<n;c++) row.appendChild(makeCard(r*rs+c));
+    w.appendChild(row);g.appendChild(w);
+  }
+  document.getElementById('pageChip').textContent=pages.length+' pages';
+  document.getElementById('c-tot').textContent=pages.length;
+}
+
+function pgLabel(i){return i===0?'1ère couv.':i===pages.length-1?'4ème couv.':'P.'+(i+1);}
+
+function makeCard(i){
+  const p=pages[i];
+  const d=document.createElement('div');
+  d.className='card s-'+(p.st||'todo')+(p.sp==='couv'?' couv':p.sp?' sp':'');
+  d.onclick=()=>openEdit(i);
+
+  const del=document.createElement('button');
+  del.className='card-del';del.title='Supprimer cette page';del.textContent='✕';
+  del.onclick=e=>{e.stopPropagation();deletePageAt(i);};
+  if(p.sp==='couv') del.style.display='none';
+  d.appendChild(del);
+
+  const num=document.createElement('div');num.className='cn';num.textContent=pgLabel(i);d.appendChild(num);
+  if(p.r){const rb=document.createElement('div');rb.className='cr';rb.textContent=p.r;d.appendChild(rb);}
+
+  const cc=document.createElement('div');cc.className='cc';
+  (p.ci||[]).slice(0,3).forEach(ci=>{
+    const row=document.createElement('div');row.className='citem';
+    const tp=TYPES.find(t=>t.id===ci.t);
+    const tb=document.createElement('span');tb.className='ctype';tb.textContent=tp?tp.lbl.split(' ').slice(-1)[0]:ci.t;
+    const tx=document.createElement('span');tx.className='ctxt';tx.textContent=ci.tx||'';
+    row.appendChild(tb);row.appendChild(tx);cc.appendChild(row);
+  });
+  if((p.ci||[]).length>3){const more=document.createElement('div');more.style.cssText='font-size:8px;color:var(--tx3);margin-top:2px;';more.textContent='+'+(p.ci.length-3)+' autre(s)';cc.appendChild(more);}
+  d.appendChild(cc);
+
+  const f=document.createElement('div');f.className='cfoot';
+  const svclbl=(p.svcs||[]).slice(0,2).join(', ')+(p.svcs&&p.svcs.length>2?' +…':'');
+  if(svclbl){const s=document.createElement('div');s.className='csvc';s.textContent=svclbl;f.appendChild(s);}
+  if(p.p){const pa=document.createElement('div');pa.className='ppill p'+(p.p||'b').toLowerCase();pa.textContent=p.p;f.appendChild(pa);}
+  d.appendChild(f);return d;
+}
+
+// ════════════════════════════════════════════════════
+// TABLE
+// ════════════════════════════════════════════════════
+const SCYCLE=['todo','wip','done','val'],SLBL={todo:'À faire',wip:'En cours',done:'Rédigé',val:'Validé'};
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function renderTable(){
+  const tb=document.getElementById('tbody');tb.innerHTML='';
+  pages.forEach((p,i)=>{
+    const tr=document.createElement('tr');
+    // page num
+    const tdN=document.createElement('td');tdN.className='td-n';tdN.textContent=pgLabel(i);tr.appendChild(tdN);
+    // rubrique
+    const tdR=document.createElement('td');tdR.className='td-r';
+    const ri=document.createElement('input');ri.className='ti';ri.value=p.r||'';ri.placeholder='Rubrique';
+    ri.onchange=()=>{p.r=ri.value;scheduleAutoSave();if(document.getElementById('view-grid').classList.contains('active'))renderGrid();};
+    tdR.appendChild(ri);tr.appendChild(tdR);
+    // contenus
+    const tdC=document.createElement('td');
+    tdC.appendChild(buildCiTableCell(i,p));
+    tr.appendChild(tdC);
+    // services
+    const tdS=document.createElement('td');
+    tdS.appendChild(buildSvcsCell(i,p));
+    tr.appendChild(tdS);
+    // parcours
+    const tdP=document.createElement('td');tdP.style.textAlign='center';
+    const pp=document.createElement('span');pp.className='ppill p'+(p.p||'b').toLowerCase();pp.textContent=p.p||'B';pp.style.cssText='cursor:pointer;font-size:11px;padding:2px 8px;';
+    pp.onclick=()=>{const n=p.p==='A'?'B':'A';p.p=n;pp.className='ppill p'+n.toLowerCase();pp.textContent=n;scheduleAutoSave();if(document.getElementById('view-grid').classList.contains('active'))renderGrid();};
+    tdP.appendChild(pp);tr.appendChild(tdP);
+    // statut
+    const tdSt=document.createElement('td');
+    const sb=document.createElement('span');sb.className='sbadge sb'+(p.st||'todo');sb.textContent=SLBL[p.st||'todo'];
+    sb.onclick=()=>{const c=p.st||'todo',n=SCYCLE[(SCYCLE.indexOf(c)+1)%4];p.st=n;sb.className='sbadge sb'+n;sb.textContent=SLBL[n];scheduleAutoSave();updateProg();if(document.getElementById('view-grid').classList.contains('active'))renderGrid();};
+    tdSt.appendChild(sb);tr.appendChild(tdSt);
+    // online
+    const tdO=document.createElement('td');
+    tdO.appendChild(buildOnlineCell(i,p));
+    tr.appendChild(tdO);
+    tb.appendChild(tr);
+  });
+}
+
+function buildCiTableCell(i,p){
+  const wrap=document.createElement('div');wrap.className='tci-list';
+  (p.ci||[]).forEach((ci,j)=>{
+    const tp=TYPES.find(t=>t.id===ci.t);
+    const row=document.createElement('div');row.className='tci';
+    const tl=document.createElement('span');tl.className='tci-type';tl.textContent=tp?tp.lbl:'–';
+    const sg=document.createElement('span');sg.className='tci-signs';sg.textContent=tp&&tp.signs?tp.signs+'sc':'';
+    const tx=document.createElement('span');tx.className='tci-txt';tx.textContent=ci.tx||'';
+    const dl=document.createElement('button');dl.className='tci-del';dl.textContent='✕';
+    dl.onclick=()=>{p.ci.splice(j,1);scheduleAutoSave();renderTable();if(document.getElementById('view-grid').classList.contains('active'))renderGrid();};
+    row.appendChild(tl);row.appendChild(sg);row.appendChild(tx);row.appendChild(dl);
+    wrap.appendChild(row);
+  });
+  const add=document.createElement('button');add.className='add-ci-btn';add.textContent='＋ Contenu';
+  add.onclick=()=>{openEdit(i);};
+  wrap.appendChild(add);return wrap;
+}
+
+function buildSvcsCell(i,p){
+  const wrap=document.createElement('div');wrap.className='svc-tags';
+  (p.svcs||[]).forEach(s=>{
+    const t=document.createElement('span');t.className='svc-tag';t.textContent=s;
+    const d=document.createElement('button');d.textContent='×';
+    d.onclick=()=>{p.svcs=p.svcs.filter(x=>x!==s);scheduleAutoSave();renderTable();};
+    t.appendChild(d);wrap.appendChild(t);
+  });
+  const add=document.createElement('select');add.className='svc-add';
+  const defO=document.createElement('option');defO.value='';defO.textContent='＋';add.appendChild(defO);
+  ALL_SVCS.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;add.appendChild(o);});
+  add.onchange=()=>{if(add.value&&!(p.svcs||[]).includes(add.value)){p.svcs=p.svcs||[];p.svcs.push(add.value);scheduleAutoSave();renderTable();}add.value='';};
+  wrap.appendChild(add);return wrap;
+}
+
+function buildOnlineCell(i,p){
+  const wrap=document.createElement('div');wrap.className='online-cell';
+  const lbl=document.createElement('label');
+  const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!p.on;
+  cb.onchange=()=>{p.on=cb.checked;scheduleAutoSave();};
+  lbl.appendChild(cb);lbl.appendChild(document.createTextNode(' En ligne + RS'));
+  const ta=document.createElement('textarea');ta.placeholder='Commentaire…';ta.value=p.onc||'';
+  ta.onchange=()=>{p.onc=ta.value;scheduleAutoSave();};
+  wrap.appendChild(lbl);wrap.appendChild(ta);return wrap;
+}
+
+// ════════════════════════════════════════════════════
+// PROGRESS
+// ════════════════════════════════════════════════════
+function updateProg(){
+  let w=0,d=0,v=0;
+  pages.forEach(p=>{if(p.st==='wip')w++;else if(p.st==='done')d++;else if(p.st==='val')v++;});
+  const n=pages.length;
+  document.getElementById('c-wip').textContent=w;
+  document.getElementById('c-done').textContent=d;
+  document.getElementById('c-val').textContent=v;
+  document.getElementById('pg-wip').style.width=(w/n*100)+'%';
+  document.getElementById('pg-done').style.width=(d/n*100)+'%';
+  document.getElementById('pg-val').style.width=(v/n*100)+'%';
+}
+
+// ════════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════════
+function renderStats(){
+  // by pole/service
+  const counts={};
+  ALL_SVCS.forEach(s=>counts[s]=0);
+  pages.forEach(p=>{(p.svcs||[]).forEach(s=>{if(counts[s]!==undefined)counts[s]++;});});
+  const poleCounts={};
+  Object.entries(POLES).forEach(([pole,svcs])=>{poleCounts[pole]=svcs.reduce((a,s)=>a+(counts[s]||0),0);});
+  const maxPole=Math.max(...Object.values(poleCounts),1);
+
+  const sg=document.getElementById('statsGrid');sg.innerHTML='';
+  Object.entries(POLES).forEach(([pole,svcs])=>{
+    const card=document.createElement('div');card.className='stat-card';
+    const h=document.createElement('h3');h.textContent=pole;card.appendChild(h);
+    svcs.forEach(s=>{
+      const c=counts[s]||0;
+      if(c===0 && svcs.length>1) return;
+      const row=document.createElement('div');row.className='stat-row';
+      const lbl=document.createElement('span');lbl.className='stat-svc';lbl.textContent=s;
+      const bw=document.createElement('div');bw.className='stat-bar-wrap';
+      const b=document.createElement('div');b.className='stat-bar';b.style.width=(c/Math.max(...svcs.map(x=>counts[x]||0),1)*100)+'%';
+      bw.appendChild(b);
+      const n=document.createElement('span');n.className='stat-num';n.textContent=c;
+      row.appendChild(lbl);row.appendChild(bw);row.appendChild(n);card.appendChild(row);
+    });
+    const tot=document.createElement('div');tot.className='stat-total';
+    tot.innerHTML=`Total pôle : <span class="stat-badge">${poleCounts[pole]}</span>`;
+    card.appendChild(tot);sg.appendChild(card);
+  });
+
+  // by type
+  const typeCounts={};
+  TYPES.forEach(t=>typeCounts[t.id]=0);
+  pages.forEach(p=>(p.ci||[]).forEach(ci=>{if(typeCounts[ci.t]!==undefined)typeCounts[ci.t]++;}));
+  const maxType=Math.max(...Object.values(typeCounts),1);
+  const tc=document.getElementById('typeChart');tc.innerHTML='';
+  TYPES.forEach(t=>{
+    const c=typeCounts[t.id]||0;
+    const row=document.createElement('div');row.className='tc-row';
+    const lbl=document.createElement('span');lbl.className='tc-lbl';lbl.textContent=t.lbl;
+    const sg=document.createElement('span');sg.className='tc-signs';sg.textContent=t.signs?t.signs+'sc':'';
+    const bw=document.createElement('div');bw.className='tc-bar-w';
+    const b=document.createElement('div');b.className='tc-bar';b.style.width=(c/maxType*100)+'%';
+    bw.appendChild(b);
+    const n=document.createElement('span');n.className='tc-num';n.textContent=c;
+    row.appendChild(lbl);row.appendChild(sg);row.appendChild(bw);row.appendChild(n);tc.appendChild(row);
+  });
+}
+
+// ════════════════════════════════════════════════════
+// MODAL ÉDITION
+// ════════════════════════════════════════════════════
+function openEdit(i){
+  curIdx=i;const p=pages[i]||{};
+  curSta=p.st||'todo';curPar=p.p||'B';
+  curSvcs=[...(p.svcs||[])];
+  curCi=(p.ci||[]).map(x=>({...x}));
+
+  document.getElementById('mttl').textContent=i===0?'1ère de couverture':i===pages.length-1?'4ème de couverture':'Page '+(i+1);
+  document.getElementById('e-rub').value=p.r||'';
+  setSta(curSta);setPar(curPar);
+  buildSvcTags();buildCiList();
+
+  // protect covers from deletion
+  document.getElementById('btn-del-page').style.display=(p.sp==='couv')?'none':'block';
+  document.getElementById('editOverlay').classList.add('open');
+}
+function closeEdit(){document.getElementById('editOverlay').classList.remove('open');curIdx=null;}
+
+function setSta(s){curSta=s;['t','w','d','v'].forEach((x,j)=>document.getElementById('sb-'+x).classList.toggle('on',['todo','wip','done','val'][j]===s));}
+function setPar(p){curPar=p;document.getElementById('pb-a').classList.toggle('on',p==='A');document.getElementById('pb-b').classList.toggle('on',p==='B');}
+
+// service tags in modal
+function buildSvcTags(){
+  populateSvcDropdown();
+  const wrap=document.getElementById('svc-tags');wrap.innerHTML='';
+  curSvcs.forEach(s=>{
+    const t=document.createElement('span');t.className='svc-sel-tag';t.textContent=s;
+    const d=document.createElement('button');d.textContent='×';
+    d.onclick=()=>{curSvcs=curSvcs.filter(x=>x!==s);buildSvcTags();};
+    t.appendChild(d);wrap.appendChild(t);
+  });
+}
+function populateSvcDropdown(){
+  const dd=document.getElementById('svc-dropdown');dd.innerHTML='<option value="">+ Ajouter un service…</option>';
+  ALL_SVCS.filter(s=>!curSvcs.includes(s)).forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;dd.appendChild(o);});
+}
+function addSvcTag(v){if(!v||curSvcs.includes(v))return;curSvcs.push(v);buildSvcTags();}
+
+// content items in modal
+function buildCiList(){
+  const list=document.getElementById('ci-list');list.innerHTML='';
+  curCi.forEach((ci,j)=>{
+    const item=document.createElement('div');item.className='ci-item';
+    // type selector
+    const head=document.createElement('div');head.className='ci-item-head';
+    const tsel=document.createElement('select');tsel.className='ci-type-sel';
+    TYPES.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.lbl+(t.signs?' ('+t.signs+'sc)':'');o.selected=t.id===ci.t;tsel.appendChild(o);});
+    tsel.onchange=()=>{ci.t=tsel.value;updateSignsHint(hint,ci.t);};
+    const hint=document.createElement('span');hint.className='ci-signs-hint';
+    updateSignsHint(hint,ci.t);
+    head.appendChild(tsel);head.appendChild(hint);
+    // text
+    const txf=document.createElement('input');txf.className='ci-txt-i';txf.placeholder='Titre / sujet…';txf.value=ci.tx||'';txf.oninput=()=>ci.tx=txf.value;
+    // service
+    const srow=document.createElement('div');srow.className='ci-svc-row';
+    const slbl=document.createElement('span');slbl.style.cssText='font-size:10.5px;color:var(--tx2);';slbl.textContent='Service :';
+    const ssel=document.createElement('select');ssel.className='ci-svc-sel';
+    const emptyO=document.createElement('option');emptyO.value='';emptyO.textContent='— choisir —';ssel.appendChild(emptyO);
+    ALL_SVCS.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;o.selected=s===ci.s;ssel.appendChild(o);});
+    ssel.onchange=()=>ci.s=ssel.value;
+    srow.appendChild(slbl);srow.appendChild(ssel);
+    // delete
+    const del=document.createElement('button');del.className='ci-del-btn';del.textContent='✕';
+    del.onclick=()=>{curCi.splice(j,1);buildCiList();};
+    item.appendChild(del);item.appendChild(head);item.appendChild(txf);item.appendChild(srow);
+    list.appendChild(item);
+  });
+}
+function updateSignsHint(el,typeId){
+  const t=TYPES.find(x=>x.id===typeId);
+  el.textContent=t&&t.signs?'≈ '+t.signs+' signes (avec espaces)':'';
+}
+function addCiItem(){curCi.push({t:'breve',tx:'',s:''});buildCiList();}
+
+function saveEdit(){
+  if(curIdx===null)return;
+  const p=pages[curIdx];
+  p.r=document.getElementById('e-rub').value;
+  p.st=curSta;p.p=curPar;
+  p.svcs=[...curSvcs];
+  p.ci=curCi.map(x=>({...x}));
+  saveData();closeEdit();renderAll();
+}
+
+function deleteCurPage(){
+  if(curIdx===null)return;
+  if(pages[curIdx].sp==='couv'){alert('Les couvertures ne peuvent pas être supprimées.');return;}
+  if(!confirm('Supprimer la page '+(curIdx+1)+' ?')) return;
+  pages.splice(curIdx,1);
+  saveData();closeEdit();renderAll();
+}
+function deletePageAt(i){
+  if(pages[i].sp==='couv') return;
+  if(!confirm('Supprimer la page '+(i+1)+' ?')) return;
+  pages.splice(i,1);saveData();renderAll();
+}
+
+// ════════════════════════════════════════════════════
+// GÉRER PAGES MODAL
+// ════════════════════════════════════════════════════
+function openAddModal(){
+  const n=pages.length;
+  const sel=document.getElementById('addCount');
+  sel.innerHTML=[4,8,12].map(x=>`<option value="${x}">+ ${x} pages (→ ${n+x} pages)</option>`).join('');
+  buildDelPageList();
+  document.getElementById('addOverlay').classList.add('open');
+}
+function closeAddModal(){document.getElementById('addOverlay').classList.remove('open');}
+
+function buildDelPageList(){
+  const list=document.getElementById('del-page-list');list.innerHTML='';
+  pages.forEach((p,i)=>{
+    if(p.sp==='couv') return;
+    const btn=document.createElement('button');
+    btn.style.cssText='font-size:11px;padding:4px 8px;border-radius:4px;border:1px solid var(--bdr);background:var(--sur2);cursor:pointer;';
+    btn.textContent='P.'+(i+1)+(p.r?' – '+p.r.substring(0,14):'');
+    btn.onclick=()=>{if(!confirm('Supprimer la page '+(i+1)+' ?')) return;pages.splice(i,1);saveData();renderAll();buildDelPageList();openAddModal();};
+    list.appendChild(btn);
+  });
+}
+
+function confirmAdd(){
+  const n=parseInt(document.getElementById('addCount').value);
+  const pos=document.getElementById('addPos').value;
+  const blank=()=>({r:'',ci:[],svcs:[],p:'B',st:'todo',on:false,onc:''});
+  const nb=Array.from({length:n},blank);
+  if(pos==='end') pages.splice(pages.length-1,0,...nb);
+  else pages.splice(Math.floor(pages.length/2),0,...nb);
+  saveData();renderAll();buildDelPageList();
+  const sel=document.getElementById('addCount');
+  sel.innerHTML=[4,8,12].map(x=>`<option value="${x}">+ ${x} pages (→ ${pages.length+x} pages)</option>`).join('');
+}
+
+// ════════════════════════════════════════════════════
+// RÉTROPLANNING
+// ════════════════════════════════════════════════════
+function buildRetro(){
+  const bar=document.getElementById('rbar');
+  const ph=document.getElementById('rphases');
+  const tot=PHASES.reduce((a,p)=>a+p.w,0);
+  PHASES.forEach(p=>{
+    const seg=document.createElement('div');seg.className='rseg';
+    seg.style.cssText=`background:${p.col};width:${p.w/tot*100}%`;
+    seg.innerHTML=`<span class="rseg-lbl">${p.short}</span>`;
+    seg.addEventListener('mouseenter',e=>showTip(e,p));
+    seg.addEventListener('mousemove',moveTip);
+    seg.addEventListener('mouseleave',hideTip);
+    seg.addEventListener('click',()=>{openRetro();setTimeout(()=>document.getElementById('rp-'+p.id)?.scrollIntoView({behavior:'smooth',block:'nearest'}),100);});
+    bar.appendChild(seg);
+    const card=document.createElement('div');card.className='rphase';card.id='rp-'+p.id;
+    card.style.background=p.bg;
+    card.innerHTML=`<div class="rphase-dot" style="background:${p.col}"></div><div><div class="rphase-ttl" style="color:${p.col}">${p.weeks} — ${p.lbl}</div><div class="rphase-items">${p.items.map(x=>'• '+x).join('<br>')}</div></div>`;
+    ph.appendChild(card);
+  });
+}
+
+function toggleRetro(){const b=document.getElementById('rbody');const open=b.classList.toggle('open');document.getElementById('rchev').textContent=open?'▲ Replier':'▼ Déplier';}
+function openRetro(){const b=document.getElementById('rbody');if(!b.classList.contains('open')){b.classList.add('open');document.getElementById('rchev').textContent='▲ Replier';}}
+
+function showTip(e,p){const t=document.getElementById('rtip');t.innerHTML=`<h4 style="color:${p.col}">${p.weeks} — ${p.lbl}</h4><ul>${p.items.map(x=>`<li>${x}</li>`).join('')}</ul>`;t.classList.add('open');moveTip(e);}
+function moveTip(e){const t=document.getElementById('rtip');let x=e.clientX+14,y=e.clientY+12;if(x+285>window.innerWidth)x=e.clientX-290;t.style.left=x+'px';t.style.top=y+'px';}
+function hideTip(){document.getElementById('rtip').classList.remove('open');}
+
+function updateRetroCursor(){
+  const dateStr=document.getElementById('retroDate').value;
+  const cursor=document.getElementById('retroCursor');
+  if(!dateStr){cursor.style.display='none';return;}
+
+  const distrib=new Date(dateStr);
+  const today=new Date();today.setHours(0,0,0,0);
+
+  // diff in weeks (negative = before distribution)
+  const diffMs=today-distrib;
+  const diffWeeks=diffMs/(7*24*3600*1000);
+
+  // total timeline: S-12 to S+1
+  const tStart=-12, tEnd=1, tRange=tEnd-tStart;
+  const pos=(diffWeeks-tStart)/tRange;
+
+  // readable
+  const opts={day:'numeric',month:'long',year:'numeric'};
+  document.getElementById('retroDateReadable').textContent='Distribution : '+distrib.toLocaleDateString('fr-FR',opts);
+
+  if(pos<0||pos>1){cursor.style.display='none';return;}
+  cursor.style.display='block';
+  cursor.style.left=(pos*100)+'%';
+
+  // label
+  const wLabel=Math.round(diffWeeks);
+  cursor.setAttribute('data-label',wLabel===0?'Diffusion':wLabel>0?'S+'+wLabel:'S'+wLabel);
+
+  saveData();
+}
+
+// ════════════════════════════════════════════════════
+// INFO POPUP
+// ════════════════════════════════════════════════════
+function showInfo(e){
+  e.stopPropagation();
+  const pop=document.getElementById('ipop');
+  const rect=e.target.getBoundingClientRect();
+  pop.style.left=Math.min(rect.left,window.innerWidth-360)+'px';
+  pop.style.top=(rect.bottom+5)+'px';
+  pop.classList.toggle('open');
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.ib')&&!e.target.closest('.ipop'))document.getElementById('ipop').classList.remove('open');});
+
+// ════════════════════════════════════════════════════
+// CLICK OUTSIDE MODALS
+// ════════════════════════════════════════════════════
+['editOverlay','addOverlay'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+
+// ════════════════════════════════════════════════════
+// RENDER ALL
+// ════════════════════════════════════════════════════
+function renderAll(){
+  renderGrid();updateProg();
+  if(document.getElementById('view-table').classList.contains('active'))renderTable();
+  if(document.getElementById('view-stats').classList.contains('active'))renderStats();
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+(async()=>{
+  await load();
+  buildRetro();
+  updateRetroCursor();
+  renderAll();
+})();
+</script>
+</body>
+</html>
